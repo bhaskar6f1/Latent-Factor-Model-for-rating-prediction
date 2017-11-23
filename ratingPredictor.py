@@ -3,6 +3,7 @@ import numpy as np
 
 from collections import defaultdict
 
+#get the data
 def readGz(f):
   for l in gzip.open(f):
     yield eval(l)
@@ -17,15 +18,9 @@ for l in readGz("train.json.gz"):
   data.append(l)
 
 
+#shuffle the data
 np.random.shuffle(data)
 
-
-def getPrediction(alpha,uB,iB,user,item,y_u,y_i,uMap,iMap):
-    i=uMap[user] if user in uMap else -1
-    j=iMap[item] if item in iMap else -1
-    rating=alpha
-    rating = np.inner(y_u[uMap[i]],y_i[iMap[j]]) + alpha  + (uB[i] if i in uB else 0)  + (iB[j] if j in iB else 0) 
-    return rating  
 
 def getPrediction2(alpha,uB,iB,i,j,y_u,y_i,uMap,iMap):
     rating = alpha  + (uB[i] if i in uB else 0)  + (iB[j] if j in iB else 0)
@@ -33,7 +28,8 @@ def getPrediction2(alpha,uB,iB,i,j,y_u,y_i,uMap,iMap):
         rating +=np.inner(y_u[uMap[i]],y_i[iMap[j]]) 
     return rating   
 
-def findLam_Fact(lam,tData,vData,factor,trials):
+#Method to Train The Latent Factor Model. This method doesn't use any Machine Learning library.
+def trainLFModel(lam,tData,vData,factor,trials):
     uTrainDict = defaultdict(lambda: defaultdict(int))
     iTrainDict = defaultdict(lambda: defaultdict(int))
     uValidDict = defaultdict(lambda: defaultdict(int))
@@ -125,7 +121,7 @@ for i in lamdas:
     tempvMSE=1
     for t in trials:
         for f in factors:
-            tempvMSE,alpha,uB,iB,uMap,iMap=findLam_Fact(i,tData,vData,f,t)
+            tempvMSE,alpha,uB,iB,uMap,iMap=trainLFModel(i,tData,vData,f,t)
 #             vMSEList.append(tempvMSE)
             print ("----------lamda: "+str(i)+"-----------Trails: "+str(t)+"-------------Factor: "+str(f)+" MSE: "+str(tempvMSE))
             if(tempvMSE<vMSE):
@@ -154,6 +150,7 @@ plt.scatter(lamdaList,vMSEList,color='red',marker='^')
 plt.xlabel('Lamda')
 plt.ylabel('MSE')
 plt.show()
+
 
 
 
